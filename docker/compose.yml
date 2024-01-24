@@ -1,9 +1,9 @@
 services:
   auditor:
     build:
-      context: ./auditor
+      context: ./image-auditor
     ports:
       - 2205:80
   musician:
     build:
-      context: ./musician
+      context: ./image-musician
