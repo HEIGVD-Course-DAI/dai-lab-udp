@@ -1,0 +1,9 @@
+services:
+  auditor:
+    build:
+      context: ./auditor
+    ports:
+      - 2205:80
+  musician:
+    build:
+      context: ./musician
