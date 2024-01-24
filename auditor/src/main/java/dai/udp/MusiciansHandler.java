@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MulticastSocket;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.google.gson.Gson;
@@ -23,15 +24,13 @@ public class MusiciansHandler implements Runnable {
         }
     };
 
-    private class UDPMusician extends Musician {
-        public UDPMusician(String uuid, String instrumentSound, long timestamp) {
-            super(uuid, soundToMusicianMap.get(instrumentSound), timestamp);
-        }
+    private record UDPMusician(String uuid, String sound, long time) {
+
     }
 
     private final String address;
     private final int port;
-    private HashMap<String, Musician> musicians = new HashMap<>();
+    private ArrayList<Musician> musicians = new ArrayList<>();
 
     public MusiciansHandler(String address, int port) {
         this.address = address;
@@ -56,11 +55,13 @@ public class MusiciansHandler implements Runnable {
 
                 Musician musician = stringToMusician(message);
 
-                if (musicians.containsKey(musician.getUuid())) {
-                    musicians.get(musician.getUuid()).setLastActivity(System.currentTimeMillis());
+                Musician targetMusician = getMusician(musician);
+                if (targetMusician != null) {
+                    targetMusician.setLastActivity(System.currentTimeMillis());
                 } else {
-                    musicians.put(musician.getUuid(), musician);
+                    musicians.add(musician);
                 }
+
             }
 
         } catch (IOException ex) {
@@ -69,11 +70,29 @@ public class MusiciansHandler implements Runnable {
     }
 
     public IMusiciansView getMusiciansView() {
-        return () -> new Gson().toJson(musicians);
+
+        return () -> {
+            purgeInactiveMusicians();
+            return new Gson().toJson(musicians) + "\n";
+        };
+    }
+
+    private void purgeInactiveMusicians() {
+        musicians.removeIf(m -> System.currentTimeMillis() - m.getLastActivity() > 5000);
     }
 
     private Musician stringToMusician(String json) {
-        return new Gson().fromJson(json, UDPMusician.class);
+
+        UDPMusician udpMusician = new Gson().fromJson(json, UDPMusician.class);
+        return new Musician(udpMusician.uuid(), soundToMusicianMap.get(udpMusician.sound()), udpMusician.time());
     }
 
+    private Musician getMusician(Musician target) {
+        for (Musician m : musicians) {
+            if (m.getUuid().equals(target.getUuid())) {
+                return m;
+            }
+        }
+        return null;
+    }
 }

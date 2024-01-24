@@ -16,8 +16,8 @@ public class TCPServer implements Runnable {
         this.musiciansView = musiciansView;
     }
 
-    private void handleClient(ServerSocket serverSocket) {
-        try (Socket socket = serverSocket.accept();
+    private void handleClient(Socket socket) {
+        try (socket;
                 BufferedWriter out = new BufferedWriter(
                         new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));) {
             String musicians = musiciansView.getMusiciansJsonString();
@@ -32,8 +32,11 @@ public class TCPServer implements Runnable {
 
     @Override
     public void run() {
+
         try (var serverSocket = new ServerSocket(port)) {
-            handleClient(serverSocket);
+            while (true) {
+                handleClient(serverSocket.accept());
+            }
         } catch (Exception e) {
             System.out.println("Exception while creating Server Socket > " + e);
         }
