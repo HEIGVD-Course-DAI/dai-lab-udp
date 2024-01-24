@@ -15,30 +15,30 @@ public class Musician {
     final static int PORT = 9904;
 
     final static HashMap<String, String> instrumentSounds;
-    static{
+    static {
         HashMap<String, String> temp = new HashMap<>();
         temp.put("piano", "ti-ta-ti");
         temp.put("trumpet", "pouet");
-        temp.put("flue", "trulu");
+        temp.put("flute", "trulu");
         temp.put("violin", "gzi-gzi");
         temp.put("drum", "boum-boum");
         instrumentSounds = temp;
     }
 
     public static void main(String[] args) {
-        if(args.length != 1)
+        if (args.length != 1)
             return;
 
         String sound = instrumentSounds.get(args[0]);
 
-        if(sound == null)
+        if (sound == null)
             return;
 
         String uuid = UUID.randomUUID().toString();
         Gson gson = new Gson();
 
         try (DatagramSocket socket = new DatagramSocket()) {
-            while(true) {
+            while (true) {
                 long currentTimeMillis = System.currentTimeMillis();
 
                 Payload p = new Payload(uuid, sound, currentTimeMillis);
@@ -61,6 +61,6 @@ public class Musician {
     }
 }
 
-record Payload(String uuid, String sound, long time){
+record Payload(String uuid, String sound, long time) {
 
 }
